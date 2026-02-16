@@ -1,145 +1,137 @@
-const socket = io();
+let users = {};
+let socket = io();
 let localStream;
-let recorder;
-let currentRoom;
+let peerConnection;
+let roomID;
+let mediaRecorder;
+let recordedChunks = [];
 
-/* PASSWORD VALIDATION */
+const config = {
+    iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+};
 
-function validatePassword(password) {
-
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasNumber = /[0-9]/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-    if (!hasUpper) return "Must contain one uppercase letter.";
-    if (!hasLower) return "Must contain one lowercase letter.";
-    if (!hasNumber) return "Must contain one number.";
-    if (!hasSpecial) return "Must contain one special character.";
-
-    return "valid";
+function showRegister(){
+    homePage.classList.add("hidden");
+    registerPage.classList.remove("hidden");
 }
 
-/* REGISTER */
+function showLogin(){
+    homePage.classList.add("hidden");
+    loginPage.classList.remove("hidden");
+}
 
-async function register() {
+function goHome(){
+    registerPage.classList.add("hidden");
+    loginPage.classList.add("hidden");
+    homePage.classList.remove("hidden");
+}
 
-    const password = document.getElementById("regPassword").value;
-    const validation = validatePassword(password);
+function register(){
+    let u = regUsername.value;
+    let p = regPassword.value;
+    let regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
 
-    if (validation !== "valid") {
-        alert(validation);
+    if(!regex.test(p)){
+        alert("Password must contain 1 uppercase, 1 lowercase, 1 number, 1 special character");
         return;
     }
 
-    const res = await fetch("/register", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-            username:document.getElementById("regUsername").value,
-            password:password
-        })
-    });
-
-    const data = await res.json();
-
-    if(data.success){
-        alert("Registered Successfully");
-        document.getElementById("registerBox").classList.add("hidden");
-        document.getElementById("loginBox").classList.remove("hidden");
-    } else {
-        alert(data.message);
-    }
+    users[u]=p;
+    alert("Registered Successfully");
+    goHome();
 }
 
-/* LOGIN */
+function login(){
+    let u = loginUsername.value;
+    let p = loginPassword.value;
 
-async function login(){
-
-    const res = await fetch("/login", {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-            username:document.getElementById("loginUsername").value,
-            password:document.getElementById("loginPassword").value
-        })
-    });
-
-    const data = await res.json();
-
-    if(data.success){
-        document.getElementById("loginBox").classList.add("hidden");
-        document.getElementById("roomBox").classList.remove("hidden");
+    if(users[u]===p){
+        loginPage.classList.add("hidden");
+        roomSection.classList.remove("hidden");
     } else {
         alert("Invalid Credentials");
     }
 }
 
-/* ROOM LOGIC */
-
-function createRoom(){
-    const roomId = document.getElementById("roomId").value;
-    socket.emit("create-room", roomId);
-    currentRoom = roomId;
+async function createRoom(){
+    roomID = roomInput.value;
+    socket.emit("join-room", roomID);
+    startVideo();
 }
 
-function joinRoom(){
-    const roomId = document.getElementById("roomId").value;
-    socket.emit("join-room", roomId);
-    currentRoom = roomId;
+async function joinRoom(){
+    roomID = roomInput.value;
+    socket.emit("join-room", roomID);
+    startVideo();
 }
 
-socket.on("room-created", () => {
-    document.getElementById("status").innerText = "Room Created";
-    startMeeting();
-});
+async function startVideo(){
+    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    localVideo.srcObject = localStream;
+    videoSection.classList.remove("hidden");
 
-socket.on("room-joined", () => {
-    document.getElementById("status").innerText = "Joined Room";
-    startMeeting();
-});
+    peerConnection = new RTCPeerConnection(config);
 
-socket.on("room-exists", () => alert("Room already exists"));
-socket.on("room-not-found", () => alert("Room not found"));
-socket.on("room-full", () => alert("Room full"));
-
-socket.on("meeting-ended", () => {
-    alert("Meeting Ended");
-    location.reload();
-});
-
-/* MEETING */
-
-async function startMeeting(){
-
-    document.getElementById("roomBox").classList.add("hidden");
-    document.getElementById("meetingBox").classList.remove("hidden");
-
-    localStream = await navigator.mediaDevices.getUserMedia({
-        video:true,
-        audio:true
+    localStream.getTracks().forEach(track=>{
+        peerConnection.addTrack(track, localStream);
     });
 
-    document.getElementById("localVideo").srcObject = localStream;
+    peerConnection.ontrack = e=>{
+        remoteVideo.srcObject = e.streams[0];
+    };
+
+    peerConnection.onicecandidate = e=>{
+        if(e.candidate){
+            socket.emit("candidate", e.candidate, roomID);
+        }
+    };
 }
 
-/* RECORDING */
+socket.on("ready", async ()=>{
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    socket.emit("offer", offer, roomID);
+});
+
+socket.on("offer", async offer=>{
+    await peerConnection.setRemoteDescription(offer);
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    socket.emit("answer", answer, roomID);
+});
+
+socket.on("answer", async answer=>{
+    await peerConnection.setRemoteDescription(answer);
+});
+
+socket.on("candidate", async candidate=>{
+    await peerConnection.addIceCandidate(candidate);
+});
 
 function startRecording(){
-    recorder = new MediaRecorder(localStream);
-    recorder.ondataavailable = e=>{
-        const a=document.createElement("a");
-        a.href=URL.createObjectURL(e.data);
-        a.download="recording.webm";
-        a.click();
-    };
-    recorder.start();
+    mediaRecorder = new MediaRecorder(localStream);
+    mediaRecorder.ondataavailable = e=>recordedChunks.push(e.data);
+    mediaRecorder.start();
+    alert("Recording Started");
 }
 
 function stopRecording(){
-    recorder.stop();
+    mediaRecorder.stop();
+    mediaRecorder.onstop = ()=>{
+        const blob = new Blob(recordedChunks,{type:"video/webm"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href=url;
+        a.download="recording.webm";
+        a.click();
+    };
 }
 
 function endMeeting(){
-    socket.emit("end-meeting", currentRoom);
+    if(peerConnection) peerConnection.close();
+    if(localStream){
+        localStream.getTracks().forEach(track=>track.stop());
+    }
+    videoSection.classList.add("hidden");
+    roomSection.classList.remove("hidden");
 }

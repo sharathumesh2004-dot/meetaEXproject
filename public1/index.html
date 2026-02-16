@@ -1,62 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MeetAtEX</title>
+    <title>MeetAtEx</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="header">
-    <h1>Meet<span>AtEX</span></h1>
-    <p class="tagline">Connect. Collaborate. Experience.</p>
-</header>
+<h1 class="logo">MeetAtEx</h1>
 
-<!-- REGISTER -->
-<div class="container" id="registerBox">
-    <h2>Create Account</h2>
-    <input id="regUsername" placeholder="Username">
-    <input id="regPassword" type="password" placeholder="Password">
-    <p class="info">
-        Must contain: 1 uppercase, 1 lowercase, 1 number, 1 special character.
-    </p>
+<div id="homePage" class="card">
+    <h2>Welcome</h2>
+    <button onclick="showRegister()">Register</button>
+    <button onclick="showLogin()">Login</button>
+</div>
+
+<div id="registerPage" class="card hidden">
+    <h2>Register</h2>
+    <input type="text" id="regUsername" placeholder="Username">
+    <input type="password" id="regPassword" placeholder="Password">
     <button onclick="register()">Register</button>
+    <button onclick="goHome()">Back</button>
 </div>
 
-<!-- LOGIN -->
-<div class="container hidden" id="loginBox">
-    <h2>Welcome Back</h2>
-    <input id="loginUsername" placeholder="Username">
-    <input id="loginPassword" type="password" placeholder="Password">
+<div id="loginPage" class="card hidden">
+    <h2>Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
     <button onclick="login()">Login</button>
+    <button onclick="goHome()">Back</button>
 </div>
 
-<!-- ROOM -->
-<div class="container hidden" id="roomBox">
-    <h2>Start a Meeting</h2>
-    <input id="roomId" placeholder="Enter Room ID">
-    <div class="button-group">
-        <button onclick="createRoom()">Create Room</button>
-        <button onclick="joinRoom()">Join Room</button>
-    </div>
-    <p id="status"></p>
+<div id="roomSection" class="card hidden">
+    <h2>Room</h2>
+    <input type="text" id="roomInput" placeholder="Enter Room ID">
+    <button onclick="createRoom()">Create Room</button>
+    <button onclick="joinRoom()">Join Room</button>
 </div>
 
-<!-- MEETING -->
-<div class="hidden meeting" id="meetingBox">
-    <div class="video-section">
+<div id="videoSection" class="hidden video-container">
+    <div class="video-box">
         <video id="localVideo" autoplay muted></video>
         <video id="remoteVideo" autoplay></video>
     </div>
 
     <div class="controls">
-        <button class="record" onclick="startRecording()">Start Recording</button>
-        <button class="stop" onclick="stopRecording()">Stop Recording</button>
-        <button class="end" onclick="endMeeting()">End Meeting</button>
-    </div>
-
-    <div class="transcript">
-        <h3>Live English Transcript</h3>
-        <div id="output"></div>
+        <button onclick="startRecording()">Start Recording</button>
+        <button onclick="stopRecording()">Stop Recording</button>
+        <button onclick="endMeeting()" class="end-btn">End Meeting</button>
     </div>
 </div>
 
