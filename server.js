@@ -12,7 +12,9 @@ app.use(express.static(__dirname + "/public1"));
 let users = [];
 let rooms = {};
 
-// REGISTER
+/* =========================
+   REGISTER
+========================= */
 app.post("/register", (req, res) => {
     const { username, password } = req.body;
 
@@ -26,7 +28,9 @@ app.post("/register", (req, res) => {
     res.json({ success: true });
 });
 
-// LOGIN
+/* =========================
+   LOGIN
+========================= */
 app.post("/login", (req, res) => {
     const { username, password } = req.body;
 
@@ -42,7 +46,9 @@ app.post("/login", (req, res) => {
     }
 });
 
-// ROOM SYSTEM
+/* =========================
+   ROOM SYSTEM
+========================= */
 io.on("connection", socket => {
 
     socket.on("create-room", roomId => {
@@ -91,6 +97,12 @@ io.on("connection", socket => {
 
 });
 
-server.listen(3000, () => {
-    console.log("Server running at http://localhost:3000");
+/* =========================
+   DEPLOYMENT PORT FIX
+========================= */
+
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+    console.log("MeetAtEX server running on port " + PORT);
 });
