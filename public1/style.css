@@ -1,90 +1,260 @@
 body {
     margin: 0;
+    padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    background: linear-gradient(135deg, #7b2ff7, #f107a3, #00c6ff);
+    background-size: 200% 200%;
+    animation: gradientMove 8s ease infinite;
+    min-height: 100vh;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
     color: white;
 }
 
-.logo {
-    margin-top: 30px;
-    font-size: 42px;
-    font-weight: 700;
-    background: linear-gradient(90deg, #00c6ff, #0072ff);
-    -webkit-background-clip: text;
-    color: transparent;
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .card {
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(20px);
-    padding: 30px;
-    margin-top: 30px;
-    border-radius: 20px;
-    width: 300px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-    animation: fadeIn 0.6s ease-in-out;
-}
-
-input {
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
-    outline: none;
-}
-
-button {
-    padding: 10px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    background: linear-gradient(90deg, #ff6a00, #ee0979);
-    color: white;
-    font-weight: bold;
-    transition: 0.3s;
-}
-
-button:hover {
-    transform: scale(1.05);
-}
-
-.hidden {
-    display: none;
-}
-
-.video-container {
-    margin-top: 30px;
     width: 90%;
-}
-
-.video-box {
-    display: flex;
-    justify-content: space-around;
-}
-
-video {
-    width: 45%;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.controls {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.end-btn {
-    background: linear-gradient(90deg, #ff0000, #990000);
+    max-width: 420px;
+    padding: 55px 45px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(25px);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+    text-align: center;
+    animation: fadeIn 0.6s ease;
 }
 
 @keyframes fadeIn {
-    from {opacity:0; transform:translateY(20px);}
-    to {opacity:1; transform:translateY(0);}
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.title {
+    font-size: 30px;
+    font-weight: 600;
+    margin-bottom: 40px;
+}
+
+.input-group {
+    width: 100%;
+    margin-bottom: 22px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 15px;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    box-sizing: border-box;
+    transition: 0.3s;
+}
+
+.input-group input:focus {
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.4);
+}
+
+.password-group {
+    position: relative;
+}
+
+.eye {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.main-btn {
+    width: 70%;
+    margin: 25px auto 15px auto;
+    padding: 15px;
+    border-radius: 15px;
+    border: none;
+    background: white;
+    color: #333;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.main-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.switch-text {
+    margin-top: 18px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.switch-text:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+    .card {
+        padding: 45px 30px;
+    }
+
+    .main-btn {
+        width: 85%;
+    }
+}
+/* ================= DASHBOARD ================= */
+
+.dashboard-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sub-title {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.room-box input {
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 15px;
+    border: none;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.room-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.secondary-btn {
+    background: rgba(255,255,255,0.3);
+    color: white;
+}
+
+.secondary-btn:hover {
+    background: rgba(255,255,255,0.5);
+}
+
+
+/* ================= ROOM SECTION ================= */
+
+#roomSection {
+    width: 95%;
+    max-width: 1200px;
+    margin: auto;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+}
+
+.meeting-header {
+    margin-bottom: 20px;
+}
+
+.meeting-header h3 {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+#currentRoomId {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+
+/* ================= VIDEO GRID ================= */
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.video-grid video {
+    width: 100%;
+    border-radius: 20px;
+    background: black;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    transform: scaleX(-1);
+}
+
+
+/* ================= CONTROLS ================= */
+
+.controls {
+    margin-top: 25px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.danger {
+    background: #ff4b5c;
+    color: white;
+}
+
+.danger:hover {
+    background: #ff2a3d;
+}
+
+
+/* ================= TRANSLATION BOX ================= */
+
+.translation-box {
+    margin-top: 25px;
+    padding: 20px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.translation-box h4 {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+#translationOutput {
+    min-height: 50px;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+}
+
+
+/* ================= RESPONSIVE MEETING ================= */
+
+@media (max-width: 768px) {
+
+    .video-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    .main-btn {
+        width: 100%;
+    }
 }

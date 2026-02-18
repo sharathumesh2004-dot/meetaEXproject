@@ -1,54 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MeetAtEx</title>
-    <link rel="stylesheet" href="style.css">
+  <title>Meet at EX</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1 class="logo">MeetAtEx</h1>
+<!-- AUTH CARD -->
+<div id="authCard" class="card">
 
-<div id="homePage" class="card">
-    <h2>Welcome</h2>
-    <button onclick="showRegister()">Register</button>
-    <button onclick="showLogin()">Login</button>
+  <h2 class="title">Meet at EX</h2>
+
+  <!-- REGISTER -->
+  <div id="registerSection">
+
+    <div class="input-group">
+      <input type="text" id="regUsername" placeholder="Username">
+    </div>
+
+    <div class="input-group password-group">
+      <input type="password" id="regPassword" placeholder="Password">
+      <span class="eye" onclick="togglePassword('regPassword')">👁</span>
+    </div>
+
+    <button class="main-btn" onclick="registerUser()">Register</button>
+
+    <p class="switch-text" onclick="showLogin()">
+      Already registered? Login
+    </p>
+
+  </div>
+
+  <!-- LOGIN -->
+  <div id="loginSection" style="display:none;">
+
+    <div class="input-group">
+      <input type="text" id="loginUsername" placeholder="Username">
+    </div>
+
+    <div class="input-group password-group">
+      <input type="password" id="loginPassword" placeholder="Password">
+      <span class="eye" onclick="togglePassword('loginPassword')">👁</span>
+    </div>
+
+    <button class="main-btn" onclick="loginUser()">Login</button>
+
+    <p class="switch-text" onclick="showRegister()">
+      New user? Register
+    </p>
+
+  </div>
+
 </div>
 
-<div id="registerPage" class="card hidden">
-    <h2>Register</h2>
-    <input type="text" id="regUsername" placeholder="Username">
-    <input type="password" id="regPassword" placeholder="Password">
-    <button onclick="register()">Register</button>
-    <button onclick="goHome()">Back</button>
-</div>
 
-<div id="loginPage" class="card hidden">
-    <h2>Login</h2>
-    <input type="text" id="loginUsername" placeholder="Username">
-    <input type="password" id="loginPassword" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <button onclick="goHome()">Back</button>
-</div>
+<!-- DASHBOARD -->
+<div id="dashboard" class="card dashboard-card" style="display:none;">
 
-<div id="roomSection" class="card hidden">
-    <h2>Room</h2>
+  <h3 class="sub-title">Welcome to Meet at EX</h3>
+
+  <div class="room-box">
     <input type="text" id="roomInput" placeholder="Enter Room ID">
-    <button onclick="createRoom()">Create Room</button>
-    <button onclick="joinRoom()">Join Room</button>
+  </div>
+
+  <div class="room-buttons">
+    <button class="main-btn" onclick="createRoom()">Create Room</button>
+    <button class="main-btn secondary-btn" onclick="joinRoom()">Join Room</button>
+  </div>
+
 </div>
 
-<div id="videoSection" class="hidden video-container">
-    <div class="video-box">
-        <video id="localVideo" autoplay muted></video>
-        <video id="remoteVideo" autoplay></video>
-    </div>
 
-    <div class="controls">
-        <button onclick="startRecording()">Start Recording</button>
-        <button onclick="stopRecording()">Stop Recording</button>
-        <button onclick="endMeeting()" class="end-btn">End Meeting</button>
-    </div>
+<!-- ROOM SECTION -->
+<div id="roomSection" style="display:none;">
+
+  <div class="meeting-header">
+    <h3>Meeting Room</h3>
+    <span id="currentRoomId"></span>
+  </div>
+
+  <!-- VIDEO GRID -->
+  <div class="video-grid" id="videoGrid"></div>
+
+  <!-- LIVE TRANSLATION -->
+  <div class="translation-box">
+    <h4>Live Translation (English)</h4>
+    <div id="translationOutput"></div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="main-btn" onclick="startRecording()">Start Recording</button>
+    <button class="main-btn secondary-btn" onclick="stopRecording()">Stop Recording</button>
+    <button class="danger main-btn" onclick="leaveRoom()">End Meeting</button>
+  </div>
+
 </div>
+
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
