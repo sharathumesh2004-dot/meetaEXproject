@@ -12,62 +12,75 @@ const io = socketio(server);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public1")));
 
+/* ================= MONGODB ================= */
+
 mongoose.connect("mongodb://127.0.0.1:27017/meetatex")
 .then(()=>console.log("MongoDB Connected"))
 .catch(err=>console.log(err));
 
-/* ================= USER MODEL ================= */
-
 const userSchema = new mongoose.Schema({
-    username: String,
-    password: String
+    username:{ type:String, unique:true },
+    password:String
 });
 
 const User = mongoose.model("User", userSchema);
 
+
 /* ================= REGISTER ================= */
 
 app.post("/register", async (req,res)=>{
-    const {username,password} = req.body;
+    try{
+        const {username,password} = req.body;
 
-    const regex = /^(?=.*[A-Z])(?=.*[\W_]).+$/;
+        const regex = /^(?=.*[A-Z])(?=.*[\W_]).+$/;
 
-    if(!regex.test(password)){
-        return res.json({
-            success:false,
-            message:"Password must contain 1 uppercase & 1 special character"
-        });
+        if(!regex.test(password)){
+            return res.json({
+                success:false,
+                message:"Password must contain 1 uppercase & 1 special character"
+            });
+        }
+
+        const existing = await User.findOne({username});
+        if(existing){
+            return res.json({
+                success:false,
+                message:"User already exists"
+            });
+        }
+
+        const hash = await bcrypt.hash(password,10);
+        await User.create({username,password:hash});
+
+        res.json({success:true,message:"Registered Successfully"});
+
+    }catch(err){
+        res.json({success:false,message:"Registration error"});
     }
-
-    const existing = await User.findOne({username});
-    if(existing){
-        return res.json({
-            success:false,
-            message:"User already exists"
-        });
-    }
-
-    const hash = await bcrypt.hash(password,10);
-    await User.create({username,password:hash});
-
-    res.json({success:true});
 });
+
 
 /* ================= LOGIN ================= */
 
 app.post("/login", async (req,res)=>{
-    const {username,password} = req.body;
+    try{
+        const {username,password} = req.body;
 
-    const user = await User.findOne({username});
-    if(!user) return res.json({success:false});
+        const user = await User.findOne({username});
+        if(!user) return res.json({success:false});
 
-    const match = await bcrypt.compare(password,user.password);
-    if(!match) return res.json({success:false});
+        const match = await bcrypt.compare(password,user.password);
+        if(!match) return res.json({success:false});
 
-    res.json({success:true});
+        res.json({success:true});
+    }
+    catch(err){
+        res.json({success:false});
+    }
 });
 
-/* ================= SOCKET SECTION ================= */
+
+/* ================= SOCKET ROOM ENGINE ================= */
 
 let rooms = {};
 
@@ -75,25 +88,25 @@ io.on("connection",(socket)=>{
 
     socket.on("join-room",(roomId)=>{
 
-        if(!rooms[roomId]) rooms[roomId]=[];
-        rooms[roomId].push(socket.id);
+        if(!rooms[roomId]) rooms[roomId] = [];
+
+        // Prevent duplicate joins
+        if(!rooms[roomId].includes(socket.id)){
+            rooms[roomId].push(socket.id);
+        }
 
         socket.join(roomId);
 
+        // Send existing users to new user
         socket.emit("existing-users",
             rooms[roomId].filter(id=>id!==socket.id)
         );
 
+        // Notify others
         socket.to(roomId).emit("user-joined",socket.id);
 
-        /* ========= TRANSLATION BROADCAST ========= */
-        socket.on("send-transcript",(data)=>{
-            socket.to(roomId).emit("receive-transcript",{
-                text:data.text,
-                username:data.username
-            });
-        });
-        /* ========================================== */
+
+        /* -------- WebRTC Signaling -------- */
 
         socket.on("offer",(data)=>{
             io.to(data.target).emit("offer",{
@@ -116,15 +129,30 @@ io.on("connection",(socket)=>{
             });
         });
 
+        /* -------- Disconnect -------- */
+
         socket.on("disconnect",()=>{
+
             if(rooms[roomId]){
-                rooms[roomId]=rooms[roomId].filter(id=>id!==socket.id);
+                rooms[roomId] = rooms[roomId].filter(id=>id!==socket.id);
+
                 socket.to(roomId).emit("user-left",socket.id);
+
+                // Clean empty room
+                if(rooms[roomId].length === 0){
+                    delete rooms[roomId];
+                }
             }
+
         });
 
     });
 
 });
 
-server.listen(3000,()=>console.log("Meet at EX running on port 3000"));
+
+/* ================= START SERVER ================= */
+
+server.listen(3000,()=>{
+    console.log("Meet at EX running on port 3000");
+});

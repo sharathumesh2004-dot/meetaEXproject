@@ -4,22 +4,19 @@ let peers = {};
 let roomId;
 let mediaRecorder;
 let recordedChunks = [];
-let usernameGlobal = "";
 
 const config = {
   iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
 };
 
-/* ================= PASSWORD TOGGLE ================= */
-
+/* PASSWORD TOGGLE */
 function togglePassword(id){
   const input=document.getElementById(id);
   input.type=input.type==="password"?"text":"password";
   input.addEventListener("blur",()=>{ input.type="password"; });
 }
 
-/* ================= SWITCH ================= */
-
+/* SWITCH */
 function showLogin(){
   registerSection.style.display="none";
   loginSection.style.display="block";
@@ -30,8 +27,7 @@ function showRegister(){
   registerSection.style.display="block";
 }
 
-/* ================= REGISTER ================= */
-
+/* REGISTER */
 async function registerUser(){
   const res=await fetch("/register",{
     method:"POST",
@@ -43,15 +39,11 @@ async function registerUser(){
   });
 
   const data=await res.json();
-  alert(data.message || "Registered successfully");
-
-  if(data.success){
-    showLogin();
-  }
+  alert(data.message||"Registered successfully");
+  if(data.success) showLogin();
 }
 
-/* ================= LOGIN ================= */
-
+/* LOGIN */
 async function loginUser(){
   const res=await fetch("/login",{
     method:"POST",
@@ -63,9 +55,7 @@ async function loginUser(){
   });
 
   const data=await res.json();
-
   if(data.success){
-    usernameGlobal = loginUsername.value;
     authCard.style.display="none";
     dashboard.style.display="block";
   } else {
@@ -73,8 +63,7 @@ async function loginUser(){
   }
 }
 
-/* ================= ROOM ================= */
-
+/* ROOM */
 function createRoom(){
   roomId=Math.floor(1000+Math.random()*9000).toString();
   roomInput.value = roomId;
@@ -82,13 +71,15 @@ function createRoom(){
 }
 
 function joinRoom(){
-  roomId=roomInput.value;
+  roomId=roomInput.value.trim();
   if(roomId) startRoom();
+  else alert("Enter Room ID");
 }
 
 async function startRoom(){
   dashboard.style.display="none";
   roomSection.style.display="block";
+  currentRoomId.innerText = "Room ID: " + roomId;
 
   localStream=await navigator.mediaDevices.getUserMedia({
     video:true,
@@ -97,12 +88,9 @@ async function startRoom(){
 
   addVideo(localStream,true);
   socket.emit("join-room",roomId);
-
-  startSpeechRecognition();
 }
 
-/* ================= SOCKET EVENTS ================= */
-
+/* SOCKET EVENTS */
 socket.on("existing-users",users=>{
   users.forEach(id=>createPeer(id,true));
 });
@@ -134,8 +122,7 @@ socket.on("user-left",id=>{
   }
 });
 
-/* ================= PEER ================= */
-
+/* PEER CONNECTION */
 function createPeer(id,initiator){
   const peer=new RTCPeerConnection(config);
 
@@ -167,6 +154,7 @@ function createPeer(id,initiator){
   return peer;
 }
 
+/* ADD VIDEO */
 function addVideo(stream,mirror){
   const video=document.createElement("video");
   video.srcObject=stream;
@@ -176,9 +164,9 @@ function addVideo(stream,mirror){
   videoGrid.appendChild(video);
 }
 
-/* ================= RECORD ================= */
-
+/* RECORDING */
 function startRecording(){
+  recordedChunks=[];
   mediaRecorder=new MediaRecorder(localStream);
   mediaRecorder.ondataavailable=e=>recordedChunks.push(e.data);
   mediaRecorder.start();
@@ -193,52 +181,10 @@ function stopRecording(){
     a.href=url;
     a.download="meeting.webm";
     a.click();
-    recordedChunks=[];
   };
 }
 
+/* LEAVE */
 function leaveRoom(){
   location.reload();
 }
-
-/* ================= LIVE TRANSCRIPT ================= */
-
-function startSpeechRecognition(){
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SpeechRecognition) return;
-
-  const recognition = new SpeechRecognition();
-  recognition.continuous = true;
-  recognition.lang = "en-US";
-
-  recognition.onresult = (event)=>{
-    const text = event.results[event.results.length-1][0].transcript;
-
-    socket.emit("send-transcript",{
-      text:text,
-      username:usernameGlobal
-    });
-  };
-
-  recognition.start();
-}
-
-socket.on("receive-transcript",(data)=>{
-  let box = document.getElementById("transcriptBox");
-
-  if(!box){
-    box=document.createElement("div");
-    box.id="transcriptBox";
-    box.style.position="fixed";
-    box.style.bottom="10px";
-    box.style.left="50%";
-    box.style.transform="translateX(-50%)";
-    box.style.background="rgba(0,0,0,0.7)";
-    box.style.color="white";
-    box.style.padding="10px 20px";
-    box.style.borderRadius="10px";
-    document.body.appendChild(box);
-  }
-
-  box.innerText = data.username + ": " + data.text;
-});
